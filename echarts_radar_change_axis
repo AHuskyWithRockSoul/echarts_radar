@@ -1,0 +1,66 @@
+echarts L57910  
+增加：
+_getIndexToDisplay : function(num,angle){
+        var filterIndex =0;
+        for(var i=0; i<num; i++){
+            if(angle>(360/num*i-360/num/2) && angle<(360/num*i+360/num/2)){
+                filterIndex = i;
+                break;
+            }
+        }
+        return filterIndex;
+    },
+_getAngle : function(mx,my,px,py){
+        var x = Math.abs(px-mx);
+        var y = Math.abs(py-my);
+        var z = Math.sqrt(Math.pow(x,2)+Math.pow(y,2));
+        var cos = y/z;
+        var radina = Math.acos(cos);
+        var angle = Math.floor(180/(Math.PI/radina));
+        if(mx>px && my>py){
+            angle = 180-angle;
+        }
+        if(mx==px && my>py){
+            angle = 180;
+        }
+        if(mx>px && my==py){
+            angle = 90;
+        }
+        if(mx<px && my>py){
+            angle = 180+angle;
+        }
+        if(mx<px && my==py){
+            angle = 270;
+        }
+        if(mx<px && my<py){
+            angle = 360-angle;
+        }
+        //the Echarts radar turns anti-clockwise.
+        return 360-angle;
+    },
+
+   随后的_showSeriesItemTooltip方法中： 
+   注释：
+   /*
+   if (tooltipTrigger != null && tooltipTrigger !== 'item') {
+            return;
+        }
+    */   
+   及
+   //var defaultHtml = dataModel.formatTooltip(dataIndex, false, dataType);
+   
+   
+   新增：
+   if(seriesModel.subType == 'radar' && tooltipTrigger == 'axis'){
+            var _data = data._rawData;
+            var temp = '';
+            for(var o = 0;o<_data._array.length; o++ ){
+                var index = this._getIndexToDisplay(_data._array[o].value.length,this._getAngle(e.offsetX,e.offsetY,seriesModel.coordinateSystem.cx,seriesModel.coordinateSystem.cy));
+                temp = temp + _data._array[o].name + '<br/>' + seriesModel.coordinateSystem._indicatorAxes[index].name+ ' : ' + _data._array[o].value[index] + '<br/>';
+            }
+            var defaultHtml = temp;
+        }
+        else{
+            var defaultHtml = dataModel.formatTooltip(dataIndex, false, dataType);
+        }
+   
